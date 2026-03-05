@@ -1,0 +1,132 @@
+import json
+import sys
+import os  # Added to allow clearing the terminal
+
+# --- 1. COLOR & LOGO CONFIG ---
+G = '\033[92m'  # Green
+Y = '\033[93m'  # Yellow
+C = '\033[96m'  # Cyan
+R = '\033[91m'  # Red
+W = '\033[0m'   # White (Reset)
+
+LOGO = f"""
+{C}  _      _  __        _______             _    
+ | |    (_)/ _|      |__   __|           | |   
+ | |     _| |_ ___      | | _ __ __ _  __| | __
+ | |    | |  _/ _ \     | || '__/ _` |/ _` |/ /
+ | |____| | ||  __/     | || | | (_| | (_|   < 
+ |______|_|_| \___|     |_||_|  \__,_|\__,_|\_\\{W}
+      {Y}>> COMMAND CENTRE v1.0 <<{W}
+"""
+
+# --- 2. DATA STORAGE ---
+all_habits = [] 
+all_expenses = [] 
+
+# --- 3. CORE LOGIC ---
+class Expense:
+    def __init__(self, name, amount, category):
+        self.name = name
+        self.amount = float(amount)
+        self.category = category
+
+class Habit:
+    def __init__(self, name, target_days):
+        self.name = name
+        self.target_days = int(target_days) 
+        self.completed_days = 0
+
+    def log_progress(self):
+        if self.completed_days < self.target_days:
+            self.completed_days += 1
+            print(f"{G}[SUCCESS]{W} Progress updated!")
+        else:
+            print(f"{Y}[GOAL REACHED]{W} Stay consistent!")
+
+# --- 4. HELPERS ---
+def clear_screen():
+    """Clears the terminal screen for a clean look."""
+    # 'nt' is for Windows (Your Acer Aspire 1)
+    os.system('cls' if os.name == 'nt' else 'clear')
+
+def save_data():
+    data = {
+        "habits": [{"name": h.name, "target_days": h.target_days, "completed_days": h.completed_days} for h in all_habits],
+        "expenses": [{"name": e.name, "amount": e.amount, "category": e.category} for e in all_expenses]
+    }
+    with open("data.json", "w") as f:
+        json.dump(data, f)
+
+def load_data():
+    global all_habits, all_expenses
+    try:
+        with open("data.json", "r") as f:
+            full_data = json.load(f)
+            if not isinstance(full_data, dict): return
+            all_habits = [Habit(i['name'], i['target_days']) for i in full_data.get("habits", [])]
+            for i, h in enumerate(all_habits):
+                h.completed_days = full_data["habits"][i]['completed_days']
+            all_expenses = [Expense(e['name'], e['amount'], e['category']) for e in full_data.get("expenses", [])]
+    except: pass
+
+# --- 5. THE DASHBOARD ---
+def show_dashboard():
+    clear_screen() # This makes sure the logo is always at the top!
+    print(LOGO)
+    print(f"{C}{'='*45}{W}")
+    total_spent = sum(e.amount for e in all_expenses)
+    print(f" 💸 {Y}Total Spending:{W}  R{total_spent:.2f}")
+    if all_habits:
+        top_habit = max(all_habits, key=lambda h: h.completed_days)
+        print(f" 🔥 {G}Top Habit:{W}       {top_habit.name} ({top_habit.completed_days}/{top_habit.target_days})")
+    print(f"{C}{'='*45}{W}")
+
+# --- 6. MENUS ---
+def finance_menu():
+    while True:
+        print(f"\n{Y}--- FINANCE MODULE ---{W}")
+        print("1. ➔ Add Expense\n2. ➔ View All\n3. ➔ Back")
+        choice = input(f"\n{C}Select:{W} ")
+        if choice == '1':
+            all_expenses.append(Expense(input("Item: "), input("Amount: R"), input("Category: ")))
+            save_data()
+        elif choice == '2':
+            for e in all_expenses: print(f" • {e.name}: {Y}R{e.amount:.2f}{W}")
+            input(f"\n{C}Press Enter to continue...{W}") # Pause so they can see the list
+        elif choice == '3': break
+
+def habit_menu():
+    while True:
+        print(f"\n{G}--- HABIT TRACKER ---{W}")
+        print("1. ➔ Add Habit\n2. ➔ View Progress\n3. ➔ Check-in\n4. ➔ Back")
+        choice = input(f"\n{C}Select:{W} ")
+        if choice == '1':
+            all_habits.append(Habit(input("Name: "), input("Goal Days: ")))
+            save_data()
+        elif choice == '2':
+            for h in all_habits: print(f" • {h.name}: {G}{h.completed_days}/{h.target_days}{W}")
+            input(f"\n{C}Press Enter to continue...{W}")
+        elif choice == '3':
+            if not all_habits: continue
+            for i, h in enumerate(all_habits): print(f"{i+1}. {h.name}")
+            try:
+                all_habits[int(input("Number: ")) - 1].log_progress()
+                save_data()
+            except: print(f"{R}Invalid entry.{W}")
+        elif choice == '4': break
+
+# --- 7. MAIN ---
+def main_menu():
+    load_data()
+    while True:
+        show_dashboard()
+        print(f"{C}1.{W} Manage Finances")
+        print(f"{C}2.{W} Manage Habits")
+        print(f"{C}3.{W} Exit")
+        choice = input(f"\n{C}Select Option:{W} ")
+        if choice == '1': finance_menu()
+        elif choice == '2': habit_menu()
+        elif choice == '3': sys.exit()
+
+if __name__ == "__main__":
+    main_menu()
