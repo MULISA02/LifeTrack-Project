@@ -1,6 +1,7 @@
 import json
 import sys
-import os  # Added to allow clearing the terminal
+import os
+import requests
 
 # --- 1. COLOR & LOGO CONFIG ---
 G = '\033[92m'  # Green
@@ -44,9 +45,15 @@ class Habit:
             print(f"{Y}[GOAL REACHED]{W} Stay consistent!")
 
 # --- 4. HELPERS ---
+def get_quote():
+    try:
+        res = requests.get("https://zenquotes.io/api/random", timeout=3)
+        data = res.json()
+        return f"{C}\"{data[0]['q']}\"{W} - {data[0]['a']}"
+    except:
+        return f"{Y}Success is the sum of small efforts repeated day-in and day-out.{W}"
+
 def clear_screen():
-    """Clears the terminal screen for a clean look."""
-    # 'nt' is for Windows (Your Acer Aspire 1)
     os.system('cls' if os.name == 'nt' else 'clear')
 
 def save_data():
@@ -67,15 +74,19 @@ def load_data():
             for i, h in enumerate(all_habits):
                 h.completed_days = full_data["habits"][i]['completed_days']
             all_expenses = [Expense(e['name'], e['amount'], e['category']) for e in full_data.get("expenses", [])]
-    except: pass
+    except:
+        pass
 
 # --- 5. THE DASHBOARD ---
 def show_dashboard():
-    clear_screen() # This makes sure the logo is always at the top!
+    clear_screen()
     print(LOGO)
+    print(f" {get_quote()}")
     print(f"{C}{'='*45}{W}")
+    
     total_spent = sum(e.amount for e in all_expenses)
     print(f" 💸 {Y}Total Spending:{W}  R{total_spent:.2f}")
+    
     if all_habits:
         top_habit = max(all_habits, key=lambda h: h.completed_days)
         print(f" 🔥 {G}Top Habit:{W}       {top_habit.name} ({top_habit.completed_days}/{top_habit.target_days})")
@@ -92,7 +103,7 @@ def finance_menu():
             save_data()
         elif choice == '2':
             for e in all_expenses: print(f" • {e.name}: {Y}R{e.amount:.2f}{W}")
-            input(f"\n{C}Press Enter to continue...{W}") # Pause so they can see the list
+            input(f"\n{C}Press Enter to continue...{W}")
         elif choice == '3': break
 
 def habit_menu():
@@ -110,9 +121,11 @@ def habit_menu():
             if not all_habits: continue
             for i, h in enumerate(all_habits): print(f"{i+1}. {h.name}")
             try:
-                all_habits[int(input("Number: ")) - 1].log_progress()
+                idx = int(input("Number: ")) - 1
+                all_habits[idx].log_progress()
                 save_data()
-            except: print(f"{R}Invalid entry.{W}")
+            except:
+                print(f"{R}Invalid entry.{W}")
         elif choice == '4': break
 
 # --- 7. MAIN ---
