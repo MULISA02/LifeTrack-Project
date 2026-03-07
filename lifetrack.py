@@ -2,6 +2,7 @@ import json
 import sys
 import os
 import requests
+import atexit
 
 # --- 1. COLOR & LOGO CONFIG ---
 G = '\033[92m'  # Green
@@ -17,8 +18,18 @@ LOGO = f"""
  | |    | |  _/ _ \     | || '__/ _` |/ _` |/ /
  | |____| | ||  __/     | || | | (_| | (_|   < 
  |______|_|_| \___|     |_||_|  \__,_|\__,_|\_\\{W}
-      {Y}>> COMMAND CENTRE v1.0 <<{W}
+      {Y}>> COMMAND CENTRE v1.1 <<{W}
 """
+
+# --- DATA FILE ---
+DATA_FILE = "data.json"
+
+# --- AUTO CLEAR DATA WHEN PROGRAM EXITS ---
+def clear_data_on_exit():
+    if os.path.exists(DATA_FILE):
+        os.remove(DATA_FILE)
+
+atexit.register(clear_data_on_exit)
 
 # --- 2. DATA STORAGE ---
 all_habits = [] 
@@ -61,13 +72,13 @@ def save_data():
         "habits": [{"name": h.name, "target_days": h.target_days, "completed_days": h.completed_days} for h in all_habits],
         "expenses": [{"name": e.name, "amount": e.amount, "category": e.category} for e in all_expenses]
     }
-    with open("data.json", "w") as f:
+    with open(DATA_FILE, "w") as f:
         json.dump(data, f)
 
 def load_data():
     global all_habits, all_expenses
     try:
-        with open("data.json", "r") as f:
+        with open(DATA_FILE, "r") as f:
             full_data = json.load(f)
             if not isinstance(full_data, dict): return
             all_habits = [Habit(i['name'], i['target_days']) for i in full_data.get("habits", [])]
@@ -76,6 +87,16 @@ def load_data():
             all_expenses = [Expense(e['name'], e['amount'], e['category']) for e in full_data.get("expenses", [])]
     except:
         pass
+
+# --- RESET DEMO DATA ---
+def reset_demo_data():
+    global all_habits, all_expenses
+    all_habits = []
+    all_expenses = []
+    if os.path.exists(DATA_FILE):
+        os.remove(DATA_FILE)
+    print(f"{G}Demo data cleared successfully!{W}")
+    input(f"{C}Press Enter to continue...{W}")
 
 # --- 5. THE DASHBOARD ---
 def show_dashboard():
@@ -135,11 +156,13 @@ def main_menu():
         show_dashboard()
         print(f"{C}1.{W} Manage Finances")
         print(f"{C}2.{W} Manage Habits")
-        print(f"{C}3.{W} Exit")
+        print(f"{C}3.{W} Reset Demo Data")
+        print(f"{C}4.{W} Exit")
         choice = input(f"\n{C}Select Option:{W} ")
         if choice == '1': finance_menu()
         elif choice == '2': habit_menu()
-        elif choice == '3': sys.exit()
+        elif choice == '3': reset_demo_data()
+        elif choice == '4': sys.exit()
 
 if __name__ == "__main__":
     main_menu()
