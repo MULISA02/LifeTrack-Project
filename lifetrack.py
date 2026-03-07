@@ -56,6 +56,23 @@ class Habit:
             print(f"{Y}[GOAL REACHED]{W} Stay consistent!")
 
 # --- 4. HELPERS ---
+
+def get_valid_number(prompt):
+    while True:
+        try:
+            value = float(input(prompt))
+            return value
+        except ValueError:
+            print(f"{R}Invalid number. Please enter a valid amount.{W}")
+
+def get_valid_integer(prompt):
+    while True:
+        try:
+            value = int(input(prompt))
+            return value
+        except ValueError:
+            print(f"{R}Invalid entry. Please enter a number.{W}")
+
 def get_quote():
     try:
         res = requests.get("https://zenquotes.io/api/random", timeout=3)
@@ -120,7 +137,10 @@ def finance_menu():
         print("1. ➔ Add Expense\n2. ➔ View All\n3. ➔ Back")
         choice = input(f"\n{C}Select:{W} ")
         if choice == '1':
-            all_expenses.append(Expense(input("Item: "), input("Amount: R"), input("Category: ")))
+            name = input("Item: ")
+            amount = get_valid_number("Amount: R")
+            category = input("Category: ")
+            all_expenses.append(Expense(name, amount, category))
             save_data()
         elif choice == '2':
             for e in all_expenses: print(f" • {e.name}: {Y}R{e.amount:.2f}{W}")
@@ -133,7 +153,9 @@ def habit_menu():
         print("1. ➔ Add Habit\n2. ➔ View Progress\n3. ➔ Check-in\n4. ➔ Back")
         choice = input(f"\n{C}Select:{W} ")
         if choice == '1':
-            all_habits.append(Habit(input("Name: "), input("Goal Days: ")))
+            name = input("Name: ")
+            goal_days = get_valid_integer("Goal Days: ")
+            all_habits.append(Habit(name, goal_days))
             save_data()
         elif choice == '2':
             for h in all_habits: print(f" • {h.name}: {G}{h.completed_days}/{h.target_days}{W}")
@@ -142,7 +164,7 @@ def habit_menu():
             if not all_habits: continue
             for i, h in enumerate(all_habits): print(f"{i+1}. {h.name}")
             try:
-                idx = int(input("Number: ")) - 1
+                idx = get_valid_integer("Number: ") - 1
                 all_habits[idx].log_progress()
                 save_data()
             except:
