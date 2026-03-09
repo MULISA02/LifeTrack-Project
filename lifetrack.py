@@ -2,7 +2,6 @@ import json
 import sys
 import os
 import requests
-import atexit
 
 # --- 1. COLOR & LOGO CONFIG ---
 G = '\033[92m'  # Green
@@ -23,13 +22,6 @@ LOGO = f"""
 
 # --- DATA FILE ---
 DATA_FILE = "data.json"
-
-# --- AUTO CLEAR DATA WHEN PROGRAM EXITS ---
-def clear_data_on_exit():
-    if os.path.exists(DATA_FILE):
-        os.remove(DATA_FILE)
-
-atexit.register(clear_data_on_exit)
 
 # --- 2. DATA STORAGE ---
 all_habits = [] 
