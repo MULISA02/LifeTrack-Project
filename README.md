@@ -1,4 +1,4 @@
-LifeTrack CLI
+#LifeTrack CLI
 I built LifeTrack because I wanted a simple, fast way to manage my habits and money without leaving the terminal. No heavy apps, no ads—just a clean Python tool that does the job.
 
 What it does
